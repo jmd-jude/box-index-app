@@ -59,8 +59,8 @@
       background: var(--white);
       border: 1px solid var(--border);
       border-radius: 10px;
-      max-width: 560px;
       width: 100%;
+      max-width: 580px;
       padding: 3rem 3.5rem;
       text-align: center;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -119,6 +119,27 @@
       margin-top: 1rem;
       font-size: 0.78rem;
       color: #999;
+    }
+
+    /* ── Hero vertical layout ── */
+    .hero-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      max-width: 580px;
+      width: 100%;
+    }
+
+    .video-wrap {
+      width: 100%;
+    }
+
+    .video-caption {
+      margin-top: 0.65rem;
+      font-size: 0.78rem;
+      color: #999;
+      text-align: center;
     }
 
     /* ── How it works ── */
@@ -200,13 +221,15 @@
   </header>
 
   <main class="hero">
+    <div class="hero-inner">
+
     <div class="card">
       <div class="badge">Internal Tool</div>
       <h1>Generate a <span>case index</span><br/>in minutes.</h1>
       <p>
         Connect to your Box account, select a case folder, and get a formatted
         Excel index — with AI-assisted document descriptions — written back to
-        Box automatically.
+        the selected folder automatically.
       </p>
       <a class="cta-btn" href="https://box-index-app-production.up.railway.app" target="_blank" rel="noopener">
         Open the App &rarr;
@@ -231,6 +254,15 @@
         </div>
       </div>
     </div>
+
+    <div class="video-wrap">
+      <div style="position:relative;padding-bottom:59.30807248764415%;height:0;">
+        <iframe src="https://www.loom.com/embed/6b8f0a2fb30943b59c8fc55903d29eb6" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;"></iframe>
+      </div>
+      <p class="video-caption">See it in action &mdash; 2 min walkthrough</p>
+    </div>
+
+    </div> <!-- /.hero-inner -->
   </main>
 
   <footer>
