@@ -4,10 +4,10 @@ A Next.js web app to generate formatted Excel document indexes from Box case fol
 
 ## What it does
 
-1. Authenticate with Box via OAuth
-2. Pick a case folder using the Box Content Picker
-3. The app traverses the folder, extracts file metadata, and generates an Excel index report
-4. The report is automatically uploaded back into the selected Box folder
+1. Authenticate with Box via OAuth.
+2. Pick a case folder using the Box Content Picker.
+3. The app traverses the folder, extracts file metadata, and generates an Excel index report.
+4. The report is automatically uploaded back into the selected Box folder.
 
 ## Local development
 
