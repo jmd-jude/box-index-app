@@ -139,7 +139,7 @@ def write_report(case_root, sections, rows, output_file):
     ws.column_dimensions['D'].width = 14
     ws.column_dimensions['E'].width = 16
     ws.column_dimensions['F'].width = 12
-    ws.column_dimensions['G'].width = 100
+    ws.column_dimensions['G'].width = 150
 
     case_name = case_root.upper()
     total_files = sum(1 for r in rows if r['Extension'] not in ('', 'no extension'))

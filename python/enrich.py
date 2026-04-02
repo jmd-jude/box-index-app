@@ -1,136 +1,114 @@
 """
-AI Document Enricher — extracts document date and description using Claude vision API.
-Reads a manifest CSV, downloads each PDF from Box, renders the first 3 pages as images,
-and asks Claude for a document date and brief description.
-Overwrites the input manifest with two new columns: AI Date, AI Description.
+Box AI Document Enricher — uses Box AI extract_structured.
+Files never leave Box custody; BAA covered by Enterprise Advanced.
 
 Usage:
   .venv/bin/python3 python/enrich.py \
     --manifest-file /tmp/test/slug_manifest.csv \
     --token <box_access_token> \
-    [--model claude-haiku-4-5-20251001] \
+    [--model google__gemini_2_5_pro] \
     [--workers 5]
 """
 
 import argparse
-import base64
 import csv
-import json
-import os
 import threading
 import concurrent.futures
+import requests
 
-import fitz  # pymupdf
-import anthropic
-from boxsdk import OAuth2, Client
+BOX_EXTRACT_URL = "https://api.box.com/2.0/ai/extract_structured"
+ENRICHABLE_EXTENSIONS = {".pdf"}
 
-MAX_PAGES = 3
-ENRICHABLE_EXTENSIONS = {'.pdf'}
-
-
-def render_pages_as_images(pdf_bytes: bytes) -> list[str]:
-    """Render first MAX_PAGES of a PDF as base64-encoded PNG strings."""
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    images = []
-    for page_num in range(min(MAX_PAGES, len(doc))):
-        page = doc[page_num]
-        pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
-        images.append(base64.standard_b64encode(pix.tobytes("png")).decode())
-    doc.close()
-    return images
-
-
-def call_claude(anthropic_client: anthropic.Anthropic, model: str, images: list[str]) -> dict:
-    """Send page images to Claude and return {date, description}."""
-    content = []
-    for img_b64 in images:
-        content.append({
-            "type": "image",
-            "source": {"type": "base64", "media_type": "image/png", "data": img_b64},
-        })
-    content.append({
-        "type": "text",
-        "text": (
-            "Review these document pages. Return a JSON object with exactly two fields:\n"
-            "- \"date\": the document's own date in YYYY-MM-DD format (look in letterhead, "
-            "header, footer, signature block, or body). Use the earliest date that appears "
-            "to be the document's creation date, not a received/filed stamp. "
-            "Return null if no clear date is found.\n"
-            "- \"description\": one sentence (15 words or fewer) describing what this document is.\n"
-            "Return only valid JSON, no markdown, no other text."
+FIELDS = [
+    {
+        "key": "document_date",
+        "type": "string",
+        "description": (
+            "The date or date range of the records in this document. "
+            "For a single document, return the document's own date in YYYY-MM-DD format — "
+            "look in letterhead, header, footer, or signature block; not a received or filed stamp. "
+            "For a compilation of records spanning multiple dates, return a range in the format "
+            "'YYYY-MM-DD – YYYY-MM-DD'. Return an empty string if no clear date is found."
         ),
-    })
+        "prompt": (
+            "What is the date or date range of this document? "
+            "If it is a single document, return its creation or signature date as YYYY-MM-DD. "
+            "If it is a compilation of records covering multiple dates, return the range as "
+            "'YYYY-MM-DD – YYYY-MM-DD'. Return empty string if no clear date exists."
+        ),
+    },
+    {
+        "key": "description",
+        "type": "string",
+        "description": (
+            "A short label identifying what type of document this is. "
+            "Maximum 20 words. Do not start with 'This document is' or 'This is'. "
+            "Write a noun phrase, not a full sentence."
+        ),
+        "prompt": (
+            "Identify what type of document this is in 20 words or fewer. "
+            "Do not start with 'This document is' or 'This is'. "
+            "Write a noun phrase only — for example: 'Forensic mental health evaluation report for [Patient Name].'"
+        ),
+    },
+]
 
-    response = anthropic_client.messages.create(
-        model=model,
-        max_tokens=150,
-        messages=[{"role": "user", "content": content}],
-    )
 
-    text = response.content[0].text.strip()
-    # Strip markdown code fences if model wraps output
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-    result = json.loads(text)
+def call_box_ai(token: str, file_id: str, model: str) -> dict:
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "items": [{"type": "file", "id": file_id}],
+        "fields": FIELDS,
+        "ai_agent": {
+            "type": "ai_agent_extract_structured",
+            "long_text": {"model": model},
+        },
+    }
+    response = requests.post(BOX_EXTRACT_URL, headers=headers, json=payload, timeout=60)
+    response.raise_for_status()
+    answer = response.json().get("answer", {})
     return {
-        "ai_date": result.get("date") or "",
-        "ai_description": result.get("description") or "",
+        "ai_date": answer.get("document_date") or "",
+        "ai_description": answer.get("description") or "",
     }
 
 
-def enrich_row(
-    box_client: Client,
-    anthropic_client: anthropic.Anthropic,
-    model: str,
-    row: dict,
-) -> dict:
-    """Download a file from Box and enrich it. Returns {ai_date, ai_description}."""
+def enrich_row(token: str, model: str, row: dict) -> dict:
     try:
-        pdf_bytes = box_client.file(row["File ID"]).content()
-        images = render_pages_as_images(pdf_bytes)
-        if not images:
-            return {"ai_date": "", "ai_description": ""}
-        return call_claude(anthropic_client, model, images)
+        return call_box_ai(token, row["File ID"], model)
     except Exception as e:
         print(f"  Warning: enrichment failed for {row['Name']}: {e}", flush=True)
         return {"ai_date": "", "ai_description": ""}
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AI Document Enricher")
+    parser = argparse.ArgumentParser(description="Box AI Document Enricher")
     parser.add_argument("--manifest-file", required=True, help="Path to *_manifest.csv (will be overwritten)")
     parser.add_argument("--token", required=True, help="Box access token")
-    parser.add_argument("--model", default="claude-haiku-4-5-20251001", help="Anthropic model ID")
-    parser.add_argument("--workers", type=int, default=5, help="Parallel download/API workers")
+    parser.add_argument("--model", default="google__gemini_2_5_pro", help="Box AI model ID")
+    parser.add_argument("--workers", type=int, default=10, help="Parallel API workers")
     args = parser.parse_args()
-
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("ERROR: ANTHROPIC_API_KEY environment variable not set", flush=True)
-        raise SystemExit(1)
-
-    box_auth = OAuth2(client_id=None, client_secret=None, access_token=args.token)
-    box_client = Client(box_auth)
-    anthropic_client = anthropic.Anthropic(api_key=api_key)
 
     with open(args.manifest_file, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
     pdf_rows = [r for r in rows if r.get("Extension", "").lower() in ENRICHABLE_EXTENSIONS]
     total = len(pdf_rows)
-    print(f"AI enrichment: {total} PDF files to process", flush=True)
+    print(f"Box AI enrichment: {total} files to process (model: {args.model})", flush=True)
 
     row_by_id = {r["File ID"]: r for r in rows}
     counter = [0]
     lock = threading.Lock()
 
     def process(row):
-        result = enrich_row(box_client, anthropic_client, args.model, row)
+        result = enrich_row(args.token, args.model, row)
         with lock:
             counter[0] += 1
             n = counter[0]
-        date_display = result["ai_date"] or "no date found"
-        print(f"  [{n}/{total}] {row['Name']} → {date_display}", flush=True)
+        print(f"  [{n}/{total}] {row['Name']} → {result['ai_date'] or 'no date'}", flush=True)
         return row["File ID"], result
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
@@ -140,7 +118,6 @@ def main():
             row_by_id[file_id]["AI Date"] = result["ai_date"]
             row_by_id[file_id]["AI Description"] = result["ai_description"]
 
-    # Ensure all rows have the new fields (non-PDF rows get empty strings)
     for row in rows:
         row.setdefault("AI Date", "")
         row.setdefault("AI Description", "")

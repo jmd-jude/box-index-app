@@ -88,13 +88,13 @@ async function runJob(
         path.join(pythonDir, 'enrich.py'),
         '--manifest-file', path.join(tmpDir, manifestFile),
         '--token', accessToken,
-        '--model', process.env.ANTHROPIC_MODEL ?? 'claude-haiku-4-5-20251001',
+        '--model', process.env.BOX_AI_MODEL ?? 'google__gemini_2_5_pro',
       ], (line) => {
         if (!line.trim()) return;
         appendLog(jobId, line.trim());
         const m = line.match(/\[(\d+)\/(\d+)\]/);
         if (m) updateJob(jobId, { progress: `AI enrichment: ${m[1]} of ${m[2]} files...` });
-      }, { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? '' });
+      });
     }
 
     // Step 3 — report
