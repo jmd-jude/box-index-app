@@ -10,8 +10,10 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
 
+  const appOrigin = new URL(process.env.BOX_REDIRECT_URI!).origin;
+
   if (!code) {
-    return NextResponse.redirect(new URL('/?error=no_code', request.url));
+    return NextResponse.redirect(new URL('/?error=no_code', appOrigin));
   }
 
   // Exchange code for tokens
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(new URL('/?error=token_exchange', request.url));
+    return NextResponse.redirect(new URL('/?error=token_exchange', appOrigin));
   }
 
   const tokenData = await tokenRes.json();
@@ -51,5 +53,5 @@ export async function GET(request: NextRequest) {
   session.userEmail = user.login;
   await session.save();
 
-  return NextResponse.redirect(new URL('/', request.url));
+  return NextResponse.redirect(new URL('/', appOrigin));
 }
