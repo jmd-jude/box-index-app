@@ -1,6 +1,7 @@
 export interface Job {
   id: string;
   status: 'queued' | 'running' | 'complete' | 'error';
+  pipeline: 'document_index' | 'deposition_summary';
   folderId: string;
   folderName: string;
   createdAt: string;
@@ -18,10 +19,16 @@ declare global {
 }
 const jobs: Map<string, Job> = global.__jobs ?? (global.__jobs = new Map());
 
-export function createJob(id: string, folderId: string, folderName: string): Job {
+export function createJob(
+  id: string,
+  folderId: string,
+  folderName: string,
+  pipeline: Job['pipeline']
+): Job {
   const job: Job = {
     id,
     status: 'queued',
+    pipeline,
     folderId,
     folderName,
     createdAt: new Date().toISOString(),
