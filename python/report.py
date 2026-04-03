@@ -263,21 +263,21 @@ def write_report(case_root, sections, rows, output_file):
                 item_num += 1
                 current_row += 1
 
-        ws.merge_cells(f'A{current_row}:B{current_row}')
+        ws.merge_cells(f'A{current_row}:C{current_row}')
         subtotal_label = ws[f'A{current_row}']
         subtotal_label.value = f'Subtotal — {len(section_rows)} files'
         subtotal_label.fill = PINK
         subtotal_label.font = BLACK_BOLD
         subtotal_label.alignment = Alignment(horizontal='right', vertical='center')
 
-        pages_cell = ws.cell(row=current_row, column=3)
+        pages_cell = ws.cell(row=current_row, column=4)
         na_note = f' (+{section_na} N/A)' if section_na else ''
         pages_cell.value = f'{section_pages:,}{na_note}'
         pages_cell.fill = PINK
         pages_cell.font = BLACK_BOLD
         pages_cell.alignment = Alignment(horizontal='center', vertical='center')
 
-        for col in range(4, 8):
+        for col in range(5, 8):
             ws.cell(row=current_row, column=col).fill = PINK
 
         ws.row_dimensions[current_row].height = 16
