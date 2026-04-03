@@ -5,6 +5,7 @@ Accepts --input-file and --output-file as arguments.
 
 import argparse
 import csv
+import json
 import os
 import re
 from collections import defaultdict
@@ -125,7 +126,7 @@ def write_duplicates_sheet(wb, rows):
         ws.row_dimensions[r_num].height = 15
 
 
-def write_report(case_root, sections, rows, output_file):
+def write_report(case_root, sections, rows, output_file, skipped=None):
     wb = Workbook()
     ws = wb.active
     ws.title = 'Case Report'
@@ -161,6 +162,12 @@ def write_report(case_root, sections, rows, output_file):
     merge_write(4, f'KNOWN PAGES: {total_pages_known:,} (non-PDF files show N/A)', BLACK, WHITE_BOLD)
 
     current_row = 6
+    if skipped:
+        skipped_total = sum(skipped.values())
+        parts = ', '.join(f"{n} {t.replace('_', ' ')}{'s' if n != 1 else ''}" for t, n in sorted(skipped.items()))
+        merge_write(5, f'EXCLUDED FROM INDEX: {skipped_total:,} items skipped ({parts}) — visible in Box but not indexable files', LTGRAY, Font(italic=True, size=9, color='555555'))
+        ws.row_dimensions[5].height = 14
+        current_row = 7
 
     def write_col_headers(r):
         headers = ['#', 'FILE NAME', 'TYPE', 'TOTAL PAGES', 'DOCUMENT DATE', 'SIZE', 'NOTES']
@@ -318,7 +325,14 @@ def main():
 
     rows = load_manifest(args.input_file)
     case_root, sections = group_by_section(rows, SKIP_FOLDERS)
-    write_report(case_root, sections, rows, args.output_file)
+
+    skipped = {}
+    meta_file = args.input_file.replace('_manifest.csv', '_meta.json')
+    if os.path.exists(meta_file):
+        with open(meta_file, encoding='utf-8') as f:
+            skipped = json.load(f).get('skipped', {})
+
+    write_report(case_root, sections, rows, args.output_file, skipped=skipped)
 
 
 if __name__ == '__main__':

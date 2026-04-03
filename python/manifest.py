@@ -5,6 +5,7 @@ Accepts --token, --folder-id, --output-dir as arguments.
 
 import argparse
 import csv
+import json
 import re
 import time
 import collections
@@ -64,7 +65,9 @@ def get_page_count_from_pdf(client, file_id):
         return None
 
 
-def walk_box_folder(client, folder_id, path="", on_file=None):
+def walk_box_folder(client, folder_id, path="", on_file=None, skipped=None):
+    if skipped is None:
+        skipped = {}
     manifest = []
 
     try:
@@ -122,7 +125,9 @@ def walk_box_folder(client, folder_id, path="", on_file=None):
                 time.sleep(REQUEST_DELAY)
 
             elif item.type == 'folder':
-                manifest.extend(walk_box_folder(client, item.id, folder_path))
+                manifest.extend(walk_box_folder(client, item.id, folder_path, on_file=on_file, skipped=skipped))
+            else:
+                skipped[item.type] = skipped.get(item.type, 0) + 1
 
     except Exception as e:
         print(f"  Error accessing folder {folder_id}: {e}", flush=True)
@@ -213,7 +218,8 @@ def main():
         file_count[0] += 1
         print(f"Processing file {file_count[0]}: {path_str}", flush=True)
 
-    manifest = walk_box_folder(client, args.folder_id, on_file=on_file)
+    skipped = {}
+    manifest = walk_box_folder(client, args.folder_id, on_file=on_file, skipped=skipped)
 
     if not manifest:
         print("No files found.", flush=True)
@@ -244,7 +250,17 @@ def main():
         writer.writerows(dup_rows_sorted)
 
     build_and_write_summary(manifest, summary_file)
-    print(f"Done. {len(manifest)} files → {output_file}", flush=True)
+
+    meta_file = os.path.join(args.output_dir, f'{slug}_meta.json')
+    with open(meta_file, 'w', encoding='utf-8') as f:
+        json.dump({'skipped': skipped, 'total_indexed': len(manifest)}, f)
+
+    skipped_total = sum(skipped.values())
+    if skipped:
+        skipped_parts = ', '.join(f"{n} {t.replace('_', ' ')}{'s' if n != 1 else ''}" for t, n in sorted(skipped.items()))
+        print(f"Done. {len(manifest)} files indexed, {skipped_total} items skipped ({skipped_parts}) → {output_file}", flush=True)
+    else:
+        print(f"Done. {len(manifest)} files → {output_file}", flush=True)
 
 
 if __name__ == "__main__":
