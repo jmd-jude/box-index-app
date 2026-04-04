@@ -7,6 +7,7 @@ export interface Job {
   createdAt: string;
   completedAt?: string;
   boxFileUrl?: string;
+  boxPdfUrl?: string;
   error?: string;
   progress?: string;
   log?: string[];

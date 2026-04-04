@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
   createJob(jobId, parentFolderId, fileName, 'deposition_summary');
 
   runJob(jobId, accessToken, fileId, fileName, parentFolderId).catch((err) => {
+    appendLog(jobId, `ERROR: ${String(err)}`);
     updateJob(jobId, { status: 'error', error: String(err) });
   });
 
@@ -107,18 +108,43 @@ async function runJob(
       if (line.trim()) appendLog(jobId, line.trim());
     });
 
-    // Step 3 — upload to Box (parent folder of the transcript)
+    // Step 3 — depo_pdf_generator.py
+    const transcriptPdf = path.join(tmpDir, `${stem}_transcript.pdf`);
+    const summarizedPdf = path.join(tmpDir, `${stem}_Summarized.pdf`);
+    updateJob(jobId, { progress: 'Generating PDF summary...' });
+    await runPython(pythonBin, [
+      path.join(pythonDir, 'depo_pdf_generator.py'),
+      '--transcript-path', transcriptPdf,
+      '--csv-path', path.join(tmpDir, topicsCsv),
+      '--output-path', summarizedPdf,
+    ], (line) => {
+      if (line.trim()) appendLog(jobId, line.trim());
+    });
+
+    // Step 4 — upload both files to Box
     updateJob(jobId, { progress: 'Uploading to Box...' });
     const dateStamp = new Date().toISOString().slice(0, 10);
     const baseName = fileName.replace(/\.pdf$/i, '');
-    const uploadName = `${baseName}_summary_${dateStamp}.xlsx`;
-    const fileBuffer = await fs.readFile(reportFile);
-    const boxFileUrl = await uploadToBox(accessToken, parentFolderId, uploadName, fileBuffer);
+
+    const xlsxBuffer = await fs.readFile(reportFile);
+    const boxFileUrl = await uploadToBox(
+      accessToken, parentFolderId,
+      `${baseName}_summary_${dateStamp}.xlsx`,
+      xlsxBuffer,
+    );
+
+    const pdfBuffer = await fs.readFile(summarizedPdf);
+    const boxPdfUrl = await uploadToBox(
+      accessToken, parentFolderId,
+      `${baseName}_Summarized_${dateStamp}.pdf`,
+      pdfBuffer,
+    );
 
     updateJob(jobId, {
       status: 'complete',
       completedAt: new Date().toISOString(),
       boxFileUrl,
+      boxPdfUrl,
       progress: 'Done',
     });
   } finally {

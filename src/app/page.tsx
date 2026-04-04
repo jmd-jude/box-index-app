@@ -21,6 +21,7 @@ interface JobStatus {
   progress?: string;
   log?: string[];
   boxFileUrl?: string;
+  boxPdfUrl?: string;
   error?: string;
 }
 
@@ -376,13 +377,13 @@ export default function Home() {
                 </h2>
                 <p className="text-slate-500 text-sm mb-6">
                   {isDepo
-                    ? 'The summary has been saved to the same Box folder as your transcript.'
+                    ? 'The PDF summary and Excel report have been saved to the same Box folder as your transcript.'
                     : 'The Excel report has been saved to your Box folder.'}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  {job.boxFileUrl && (
+                  {job.boxPdfUrl && (
                     <a
-                      href={job.boxFileUrl}
+                      href={job.boxPdfUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
@@ -390,7 +391,20 @@ export default function Home() {
                       onMouseOver={e => (e.currentTarget.style.backgroundColor = '#4f7a4f')}
                       onMouseOut={e => (e.currentTarget.style.backgroundColor = '#669966')}
                     >
-                      {isDepo ? 'Open Summary' : 'Open in Box'}
+                      Open PDF Summary
+                    </a>
+                  )}
+                  {job.boxFileUrl && (
+                    <a
+                      href={job.boxFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                      style={{ backgroundColor: isDepo && job.boxPdfUrl ? '#455A64' : '#669966' }}
+                      onMouseOver={e => (e.currentTarget.style.backgroundColor = isDepo && job.boxPdfUrl ? '#37474F' : '#4f7a4f')}
+                      onMouseOut={e => (e.currentTarget.style.backgroundColor = isDepo && job.boxPdfUrl ? '#455A64' : '#669966')}
+                    >
+                      {isDepo ? 'Open Excel' : 'Open in Box'}
                     </a>
                   )}
                   <button
@@ -413,6 +427,15 @@ export default function Home() {
                 </div>
                 <h2 className="text-xl font-semibold text-slate-800 mb-2">Something went wrong</h2>
                 <p className="text-slate-500 text-sm mb-1">{job.error}</p>
+                {job.log && job.log.length > 0 && (
+                  <div className="text-left bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300 overflow-auto max-h-48 mt-4 mb-2">
+                    {job.log.slice(-30).map((line, i) => (
+                      <div key={i} className={line.startsWith('ERROR') ? 'text-red-400' : 'text-slate-400'}>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <button
                   onClick={handleReset}
                   className="mt-6 border border-slate-300 text-slate-700 px-6 py-2.5 rounded-lg font-medium hover:bg-slate-100 transition-colors"

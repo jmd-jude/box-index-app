@@ -313,6 +313,13 @@ def main():
     total_pages = len(doc)
     print(f"Transcript: {total_pages} pages ({file_name})", flush=True)
 
+    # Save transcript PDF for later use by depo_pdf_generator.py
+    slug = make_slug(file_name)
+    transcript_path = os.path.join(args.output_dir, f"{slug}_transcript.pdf")
+    with open(transcript_path, 'wb') as _f:
+        _f.write(pdf_bytes)
+    print(f"Transcript PDF saved → {transcript_path}", flush=True)
+
     # --- Preamble skip ---
     if args.page_start is not None:
         page_start = max(1, args.page_start)
@@ -372,7 +379,6 @@ def main():
     failed_count = sum(1 for r in results if r.get("_failed"))
 
     # --- Write CSV ---
-    slug = make_slug(file_name)
     csv_path = os.path.join(args.output_dir, f"{slug}_depo_topics.csv")
 
     with open(csv_path, "w", newline="", encoding="utf-8") as f:

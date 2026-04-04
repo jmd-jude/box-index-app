@@ -77,7 +77,7 @@ export async function uploadToBox(
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Box upload failed: ${body}`);
+    throw new Error(`Box upload failed: HTTP ${res.status} — ${body || '(empty body)'}`);
   }
 
   const data = await res.json();
