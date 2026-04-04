@@ -25,16 +25,33 @@ from boxsdk import OAuth2, Client
 
 BOX_EXTRACT_URL = "https://api.box.com/2.0/ai/extract_structured"
 
-SYSTEM_CONTEXT = (
-    "You are a litigation support analyst processing deposition transcripts "
-    "for use by forensic psychiatry expert witnesses in complex litigation. These summaries "
-    "will be used by forensic psychiatry expert witnesses to rapidly locate and reference specific "
-    "testimony. Accuracy, completeness, and precise attribution are paramount. "
-    "The expert witnesses reviewing these summaries are professionals who will "
-    "be testifying in court — they need summaries that capture not just what "
-    "was discussed, but specifically what the witness admitted, denied, "
-    "qualified, or quantified."
-)
+SYSTEM_CONTEXT = ("""You are a specialized litigation support analyst processing deposition 
+transcripts exclusively for use by board-certified forensic psychiatrists 
+and psychologists serving as expert witnesses in complex civil and criminal 
+litigation.
+
+These experts are not reading for narrative — they are building or 
+defending a clinical forensic opinion that will be tested under 
+cross-examination. What they need from a deposition summary is not a 
+record of what was discussed, but a precise, citable inventory of what 
+the witness committed to, walked back, contradicted, or qualified.
+
+Prioritize capturing:
+- Statements about the witness's own psychological state, symptoms, 
+  or mental health history — including any hedges, denials, or 
+  minimizations
+- Admissions or denials regarding prior psychiatric treatment, 
+  medications, hospitalizations, or diagnoses
+- Claims about functional capacity — what the witness says they 
+  can or cannot do, with what frequency, and since when
+- Any moment where the witness corrected themselves, claimed not 
+  to recall, or gave an answer that differed from a prior statement
+- Specific numbers, dates, frequencies, and qualifiers — these are 
+  the details that get tested on cross-examination
+
+Accuracy and precise attribution are non-negotiable. Do not 
+characterize, interpret, or draw conclusions — surface the record 
+faithfully so the expert can form their own opinion.""")
 
 FIELDS = [
     {
@@ -61,16 +78,17 @@ FIELDS = [
         "type": "string",
         "description": (
             "If a new topic begins on the focal page, a short noun phrase of "
-            "3–7 words identifying the topic. Should be specific enough to be "
-            "useful for issue-spotting in litigation. Examples: "
-            "'Witness's prior relationship with decedent', "
-            "'Capacity observations during estate planning meetings', "
-            "'Defendant's financial pressure on plaintiff'. "
+            "5–10 words identifying the topic. Should be specific enough to be "
+            "useful for issue-spotting in litigation."
+            "Examples: "
+                "'Witness's prior psychiatric treatment history', "
+                "'Claimant's description of PTSD symptoms onset', "
+                "'Defendant's observations of plaintiff's behavior'. "
             "Return empty string if no new topic begins."
         ),
         "prompt": (
-            "If a new topic begins on the focal page, write a 3–7 word noun "
-            "phrase that labels the topic specifically enough for a litigator "
+            "If a new topic begins on the focal page, write a 5–10 word noun "
+            "phrase that labels the topic specifically enough for a forensic expert "
             "to identify it as legally relevant. Avoid generic labels like "
             "'Further examination' or 'Continued discussion'. "
             "Return empty string if no new topic begins."
@@ -104,21 +122,37 @@ FIELDS = [
         ),
     },
     {
-        "key": "legal_significance",
-        "type": "string",
-        "description": (
-            "If a new topic begins on the focal page, a brief note (10 words "
-            "or fewer) on why this testimony may be significant for litigation — "
-            "e.g., 'Establishes timeline', 'Key admission re: capacity', "
-            "'Limiting denial', 'Financial motive evidence'. "
-            "Return empty string if no new topic begins or if significance "
-            "is not apparent."
-        ),
-        "prompt": (
-            "If a new topic begins and the testimony appears legally significant, "
-            "note why in 10 words or fewer. Examples: 'Key admission', "
-            "'Limiting denial', 'Establishes timeline', 'Credibility issue'. "
-            "Return empty string if no new topic or significance not apparent."
+    "key": "legal_significance",
+    "type": "string",
+    "description": (
+        "If a new topic begins on the focal page, a brief tag (10 words "
+        "or fewer) flagging why this testimony may be significant to a "
+        "forensic psychiatrist building or defending a clinical opinion. "
+        "Draw from this vocabulary where applicable: "
+            "'Prior psychiatric history admission', "
+            "'Symptom onset timeline', "
+            "'Treatment denial or minimization', "
+            "'Functional capacity claim', "
+            "'Prior inconsistent statement', "
+            "'Malingering indicator', "
+            "'Credibility qualifier', "
+            "'Causation claim', "
+            "'Substance use admission', "
+            "'Key concession under cross'. "
+        "Use your own label if none fit. "
+        "Return empty string if no new topic or significance not apparent."
+    ),
+    "prompt": (
+        "If a new topic begins, flag its forensic psychiatric significance "
+        "in 10 words or fewer. Focus on what a forensic expert would need "
+        "to know when building or defending a clinical opinion — e.g., "
+        "'Prior psychiatric history admission', 'Symptom onset timeline', "
+        "'Treatment denial or minimization', 'Functional capacity claim', "
+        "'Prior inconsistent statement', 'Malingering indicator', "
+        "'Credibility qualifier', 'Causation claim', "
+        "'Substance use admission', 'Key concession under cross'. "
+        "Use your own label if none fit. "
+        "Return empty string if no new topic or significance not apparent."
         ),
     },
 ]
