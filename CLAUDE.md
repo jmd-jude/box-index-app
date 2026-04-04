@@ -10,14 +10,15 @@ FPAmed Box Index Tool — a Next.js 14 web app that lets FPAmed (forensic psychi
 
 **Document Index:** Pick a case folder → generates a formatted Excel document index (file metadata, page counts, AI-extracted dates and descriptions). Report is uploaded back to the selected folder.
 
-**Deposition Summary:** Pick a deposition transcript PDF → processes it page by page using Box AI, detecting topic boundaries and extracting subject labels, summaries, and legal significance notes. Excel summary is uploaded to the same folder as the source transcript.
+**Deposition Summary:** Pick a deposition transcript PDF → processes it page by page using Box AI, detecting topic boundaries and extracting subject labels, summaries, and legal significance notes. Produces two outputs uploaded to the same folder as the source transcript: an Excel summary and a merged PDF (clickable summary table prepended to the original transcript).
 
 Core document processing logic lives in Python scripts invoked as child processes from the Next.js API layer:
 - `python/manifest.py` — Box folder traversal + metadata extraction
 - `python/enrich.py` — optional AI enrichment via Box AI `extract_structured`
 - `python/report.py` — Excel generation for document index
-- `python/depo_summary.py` — page-by-page deposition extraction via Box AI
+- `python/depo_summary.py` — page-by-page deposition extraction via Box AI; also saves transcript PDF to tmpdir
 - `python/depo_report.py` — Excel generation for deposition summary
+- `python/depo_pdf_generator.py` — PDF generation for deposition summary; builds styled table with GoTo links, merges with transcript
 
 ---
 
@@ -39,6 +40,7 @@ npx tsc --noEmit   # type-check without building
 # Deposition Summary
 .venv/bin/python3 python/depo_summary.py --file-id <id> --token <tok> --output-dir /tmp/depo_test
 .venv/bin/python3 python/depo_report.py --input-file /tmp/depo_test/slug_depo_topics.csv --output-file /tmp/depo_test/summary.xlsx
+.venv/bin/python3 python/depo_pdf_generator.py --transcript-path /tmp/depo_test/slug_transcript.pdf --csv-path /tmp/depo_test/slug_depo_topics.csv --output-path /tmp/depo_test/slug_Summarized.pdf
 
 # Test on first 10 pages only (faster iteration)
 .venv/bin/python3 python/depo_summary.py --file-id <id> --token <tok> --output-dir /tmp/depo_test --page-end 10
@@ -69,7 +71,9 @@ The `Job` interface includes a `pipeline` field (`'document_index' | 'deposition
 
 **Document Index pipeline:** manifest.py → *(optional)* enrich.py → report.py → upload to Box folder → `complete`
 
-**Deposition Summary pipeline:** depo_summary.py → depo_report.py → upload to Box (parent folder of transcript) → `complete`
+**Deposition Summary pipeline:** depo_summary.py → depo_report.py → depo_pdf_generator.py → upload Excel + PDF to Box (parent folder of transcript) → `complete`
+
+The depo pipeline saves the downloaded transcript PDF to tmpdir as `{slug}_transcript.pdf` so `depo_pdf_generator.py` can merge it without a second download. Both `boxFileUrl` (Excel) and `boxPdfUrl` (merged PDF) are stored on the job and surfaced as separate buttons in the completion UI.
 
 ### Python invocation
 Both route handlers auto-detect the venv python at `.venv/bin/python3`, falling back to system `python3`. stdout/stderr lines are captured and appended to `job.log[]` for display in the UI. The last non-empty output line is surfaced as the error message on non-zero exit.
@@ -115,12 +119,13 @@ For local dev, `BOX_REDIRECT_URI=http://localhost:3000/api/auth/callback`. The B
 | `src/lib/box.ts` | `getFreshToken`, `getBoxUser`, `uploadToBox` |
 | `src/lib/session.ts` | `SessionData` interface and `iron-session` options |
 | `src/app/api/generate/route.ts` | Document index job orchestration — manifest → enrich → report → upload |
-| `src/app/api/depo/route.ts` | Deposition summary job orchestration — depo_summary → depo_report → upload to parent folder |
+| `src/app/api/depo/route.ts` | Deposition summary job orchestration — depo_summary → depo_report → depo_pdf_generator → upload Excel + PDF to parent folder |
 | `python/manifest.py` | Accepts `--token`, `--folder-id`, `--output-dir` |
 | `python/enrich.py` | AI enrichment — calls Box AI `extract_structured` with each PDF's file ID; date field supports ranges |
 | `python/report.py` | Accepts `--input-file`, `--output-file`; uses `AI Date` over filename/Box metadata date when present |
-| `python/depo_summary.py` | Downloads PDF, auto-detects testimony start/end, processes pages with 3-page sliding window via Box AI; outputs `{slug}_depo_topics.csv` |
+| `python/depo_summary.py` | Downloads PDF, auto-detects testimony start/end, processes pages with 3-page sliding window via Box AI; outputs `{slug}_depo_topics.csv` and saves `{slug}_transcript.pdf` to tmpdir |
 | `python/depo_report.py` | Reads topics CSV, produces formatted Excel with PAGE/SUBJECT/SUMMARY/SIGNIFICANCE columns; accent border on rows with legal significance |
+| `python/depo_pdf_generator.py` | Reads topics CSV + saved transcript PDF; builds styled summary table with exact PyMuPDF font-metric row heights and LINK_GOTO annotations; merges with transcript into `{slug}_Summarized.pdf` |
 | `python/depo_experiment.py` | Original proof-of-concept — do not invoke from app, do not modify |
 | `src/app/globals.css` | Box Content Picker CSS overrides scoped to `#box-picker-container` |
 
