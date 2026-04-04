@@ -94,10 +94,14 @@ def _measure_lines(text: str, col_width: float, fontname: str, fontsize: float) 
 
 
 def _row_height(topic: dict) -> float:
+    subject_lines = _measure_lines(topic.get('subject', ''), COL_SUBJECT, FONT_BOLD, FSIZE)
+    sig = topic.get('legal_significance', '').strip()
+    if sig:
+        subject_lines += _measure_lines(sig, COL_SUBJECT, FONT_ITALIC, FSIZE - 1)
     max_lines = max(
         1,
         _measure_lines(topic.get('summary', ''), COL_SUMMARY, FONT_SERIF, FSIZE),
-        _measure_lines(topic.get('subject', ''), COL_SUBJECT, FONT_BOLD, FSIZE),
+        subject_lines,
     )
     return max(22.0, max_lines * LINE_H + 2 * PAD)
 
@@ -244,11 +248,25 @@ def build_summary_pdf(topics: list, case_name: str):
             link_records.append((len(doc) - 1, r_pg, ps))
 
         # Subject cell
-        r_sub = fitz.Rect(x_subject, y, x_subject + COL_SUBJECT, y + rh)
-        _tb(page, _inset(r_sub, PAD),
-            _sanitize(topic.get('subject', ''), f"p{page_label} subject"),
-            FONT_BOLD if has_sig else FONT_SERIF, FSIZE,
-            label=f"p{page_label} subject")
+        if has_sig:
+            subject_lines = _measure_lines(topic.get('subject', ''), COL_SUBJECT, FONT_BOLD, FSIZE)
+            split_y = y + PAD + subject_lines * LINE_H
+            r_sub_top = fitz.Rect(x_subject + PAD, y + PAD, x_subject + COL_SUBJECT - PAD, split_y)
+            r_sub_bot = fitz.Rect(x_subject + PAD, split_y, x_subject + COL_SUBJECT - PAD, y + rh - PAD)
+            _tb(page, r_sub_top,
+                _sanitize(topic.get('subject', ''), f"p{page_label} subject"),
+                FONT_BOLD, FSIZE,
+                label=f"p{page_label} subject")
+            _tb(page, r_sub_bot,
+                _sanitize(topic.get('legal_significance', ''), f"p{page_label} significance"),
+                FONT_ITALIC, FSIZE - 1, color=C_ACCENT,
+                label=f"p{page_label} significance")
+        else:
+            r_sub = fitz.Rect(x_subject, y, x_subject + COL_SUBJECT, y + rh)
+            _tb(page, _inset(r_sub, PAD),
+                _sanitize(topic.get('subject', ''), f"p{page_label} subject"),
+                FONT_SERIF, FSIZE,
+                label=f"p{page_label} subject")
 
         # Summary cell
         r_sum = fitz.Rect(x_summary, y, x_summary + COL_SUMMARY, y + rh)
