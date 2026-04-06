@@ -3,26 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FPAmed Document Index</title>
+  <title>FPAmed — AI Workflows</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green:      #669966;
-      --green-dark: #4f7a4f;
-      --green-light:#e8f0e8;
-      --text:       #222222;
-      --muted:      #666666;
-      --border:     #d4e0d4;
-      --white:      #ffffff;
+      --green:       #669966;
+      --green-dark:  #4f7a4f;
+      --green-light: #e8f0e8;
+      --text:        #1a1a1a;
+      --muted:       #666;
+      --border:      #d4e0d4;
+      --white:       #ffffff;
+      --bg:          #f5f7f5;
+      --dark:        #1a2a1a;
     }
 
     body {
       font-family: 'Open Sans', sans-serif;
-      background: #f5f7f5;
+      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -31,8 +33,7 @@
 
     /* ── Header ── */
     header {
-      background: var(--white);
-      border-bottom: 3px solid var(--green);
+      background: var(--dark);
       padding: 0 2rem;
     }
 
@@ -41,174 +42,270 @@
       margin: 0 auto;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1.25rem 0;
+      justify-content: space-between;
+      padding: 1.4rem 0;
     }
 
+    .header-inner img { height: 36px; width: auto; }
 
-    /* ── Hero ── */
-    .hero {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4rem 2rem;
-    }
-
-    .card {
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      width: 100%;
-      max-width: 580px;
-      padding: 3rem 3.5rem;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    }
-
-    .badge {
-      display: inline-block;
-      background: var(--green-light);
-      color: var(--green-dark);
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+    .header-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      padding: 0.3rem 0.75rem;
-      border-radius: 20px;
-      margin-bottom: 1.5rem;
+      color: rgba(255,255,255,0.3);
     }
 
-    .card h1 {
-      font-size: 1.75rem;
+    /* ── Hero strip ── */
+    .hero-strip {
+      background: var(--dark);
+      border-bottom: 3px solid var(--green);
+      padding: 2.75rem 2rem 3rem;
+    }
+
+    .hero-strip-inner {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 0.85rem;
+    }
+
+    .hero-strip h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-strip p {
+      font-size: 0.97rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.65;
+      max-width: 540px;
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      padding: 3rem 2rem 4rem;
+    }
+
+    .main-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 1.1rem;
+    }
+
+    /* ── App preview ── */
+    .app-block {
+      display: flex;
+      gap: 2.5rem;
+      align-items: flex-start;
+    }
+
+    .app-text { flex: 1; padding-top: 0.25rem; }
+
+    .app-text h2 {
+      font-size: 1.3rem;
       font-weight: 700;
       color: var(--text);
+      margin-bottom: 0.6rem;
       line-height: 1.25;
-      margin-bottom: 1rem;
     }
 
-    .card h1 span { color: var(--green); }
-
-    .card p {
-      font-size: 0.97rem;
+    .app-text p {
+      font-size: 0.9rem;
       color: var(--muted);
       line-height: 1.65;
-      margin-bottom: 2.25rem;
+      margin-bottom: 1.4rem;
     }
 
-    .cta-btn {
+    .app-link {
       display: inline-block;
       background: var(--green);
       color: var(--white);
-      font-family: 'Open Sans', sans-serif;
-      font-size: 1rem;
+      font-size: 0.88rem;
       font-weight: 600;
       text-decoration: none;
-      padding: 0.85rem 2.25rem;
+      padding: 0.65rem 1.6rem;
       border-radius: 4px;
-      transition: background 0.15s ease, box-shadow 0.15s ease;
       letter-spacing: 0.01em;
+      transition: background 0.15s, box-shadow 0.15s;
     }
-
-    .cta-btn:hover {
+    .app-link:hover {
       background: var(--green-dark);
       box-shadow: 0 4px 14px rgba(102,153,102,0.35);
     }
 
-    .cta-note {
-      margin-top: 1rem;
-      font-size: 0.78rem;
-      color: #999;
+    .app-preview {
+      flex: 1.3;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+      text-decoration: none;
+      display: block;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .app-preview:hover {
+      box-shadow: 0 10px 32px rgba(0,0,0,0.14);
+      transform: translateY(-2px);
+    }
+    .app-preview img {
+      width: 100%;
+      display: block;
     }
 
-    /* ── Hero vertical layout ── */
-    .hero-inner {
+    /* ── Workflow cards ── */
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.1rem;
+    }
+
+    .wf-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem 1.5rem;
+    }
+
+    .wf-card.dim { opacity: 0.4; }
+
+    .wf-num {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 0.45rem;
+    }
+
+    .wf-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .wf-card p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .wf-badge {
+      margin-top: 0.9rem;
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+    .badge-live {
+      background: var(--green);
+      color: var(--white);
+    }
+    .badge-next {
+      background: var(--green-light);
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Updates list ── */
+    .update-list {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 2rem;
-      max-width: 580px;
-      width: 100%;
+      gap: 0.75rem;
     }
 
-    .video-wrap {
-      width: 100%;
-    }
-
-    .video-caption {
-      margin-top: 0.65rem;
-      font-size: 0.78rem;
-      color: #999;
-      text-align: center;
-    }
-
-    /* ── How it works ── */
-    .steps {
+    .update-item {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.1rem 1.4rem;
       display: flex;
-      gap: 0;
-      margin: 2.5rem 0 0;
-      padding-top: 2.5rem;
-      border-top: 1px solid var(--border);
-      text-align: left;
+      align-items: center;
+      gap: 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .update-item:hover {
+      border-color: var(--green);
+      box-shadow: 0 2px 10px rgba(102,153,102,0.12);
     }
 
-    .step {
-      flex: 1;
-      padding: 0 1.25rem;
-      position: relative;
-    }
-
-    .step:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 0.5rem;
-      bottom: 0;
-      width: 1px;
-      background: var(--border);
-    }
-
-    .step-num {
+    .update-date {
       font-size: 0.7rem;
       font-weight: 700;
       color: var(--green);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 0.35rem;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      width: 5.5rem;
+      flex-shrink: 0;
     }
 
-    .step-label {
-      font-size: 0.82rem;
-      color: var(--text);
+    .update-title {
+      font-size: 0.92rem;
       font-weight: 600;
-      margin-bottom: 0.2rem;
+      color: var(--text);
     }
 
-    .step-desc {
-      font-size: 0.76rem;
+    .update-sub {
+      font-size: 0.8rem;
       color: var(--muted);
-      line-height: 1.5;
+      margin-top: 0.15rem;
     }
+
+    .update-arrow {
+      margin-left: auto;
+      color: var(--border);
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .update-item:hover .update-arrow { color: var(--green); }
 
     /* ── Footer ── */
     footer {
       text-align: center;
-      padding: 1.5rem 2rem;
+      padding: 1.4rem 2rem;
       font-size: 0.75rem;
       color: #aaa;
       border-top: 1px solid var(--border);
       background: var(--white);
     }
-
     footer a { color: var(--green); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
-    @media (max-width: 560px) {
-      .card { padding: 2rem 1.5rem; }
-      .card h1 { font-size: 1.4rem; }
-      .steps { flex-direction: column; gap: 1.25rem; }
-      .step:not(:last-child)::after { display: none; }
-      .step { padding: 0; }
+    @media (max-width: 680px) {
+      .app-block { flex-direction: column-reverse; }
+      .workflow-grid { grid-template-columns: 1fr; }
+      .hero-strip h1 { font-size: 1.5rem; }
     }
   </style>
 </head>
@@ -216,46 +313,78 @@
 
   <header>
     <div class="header-inner">
-      <img src="logo.png" alt="FPAmed — Forensic Psychiatric Associates" style="height:44px;width:auto;" />
+      <img src="logo.png" alt="FPAmed" />
+      <span class="header-tag">Box Platform &middot; AI Workflows</span>
     </div>
   </header>
 
-  <main class="hero">
-    <div class="hero-inner">
-
-    <div class="card">
-      <div class="badge">Internal Tool</div>
-      <h1>Generate a <span>case index</span><br/>in minutes.</h1>
-      <p>
-        Connect to your Box account, select a case folder, and get a formatted
-        Excel index — with AI-assisted document descriptions — written back to
-        the selected folder automatically.
-      </p>
-      <a class="cta-btn" href="https://box-index-app-production.up.railway.app" target="_blank" rel="noopener">
-        Open the App &rarr;
-      </a>
-      <p class="cta-note">Sign in with your Box account to continue.</p>
-
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">Step 1</div>
-          <div class="step-label">Connect Box</div>
-          <div class="step-desc">Authorize once with your Box credentials.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">Step 2</div>
-          <div class="step-label">Pick a folder</div>
-          <div class="step-desc">Browse to any case folder in Box.</div>
-        </div>
-        <div class="step">
-          <div class="step-num">Step 3</div>
-          <div class="step-label">Get the index</div>
-          <div class="step-desc">An Excel report is saved back to that folder.</div>
-        </div>
-      </div>
+  <div class="hero-strip">
+    <div class="hero-strip-inner">
+      <div class="eyebrow">Engagement Overview</div>
+      <h1>Custom AI document tools,<br/>built on your existing Box subscription.</h1>
+      <p>Automated pipelines for document indexing and deposition analysis.</p>
     </div>
+  </div>
 
-    </div> <!-- /.hero-inner -->
+  <main>
+    <div class="main-inner">
+
+      <!-- Updates -->
+      <section>
+        <div class="section-label">Updates</div>
+        <div class="update-list">
+          <a class="update-item" href="update-040626.html" target="_blank" rel="noopener noreferrer">
+            <span class="update-date">Apr 6, 2026</span>
+            <div>
+              <div class="update-title">Update — April 2026</div>
+              <!-- <div class="update-sub">Platform strategy, two workflows live, open questions for discussion</div> -->
+            </div>
+            <span class="update-arrow">&#8594;</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- App -->
+      <section>
+        <div class="section-label">The App</div>
+        <div class="app-block">
+          <div class="app-text">
+            <h2>Sign in with Box.<br/>Run a workflow.<br/>Done.</h2>
+            <p>No new accounts. No training. Authenticate with existing Box credentials, pick a tool, navigate to a folder or file, and let it run. Output appears in Box.</p>
+            <a class="app-link" href="https://fpa-toolkit.up.railway.app/" target="_blank" rel="noopener noreferrer">Open the App &rarr;</a>
+          </div>
+          <a class="app-preview" href="https://fpa-toolkit.up.railway.app/" target="_blank" rel="noopener noreferrer">
+            <img src="preview.png" alt="FPAmed Document Tools app preview" />
+          </a>
+        </div>
+      </section>
+
+      <!-- Workflows -->
+      <section>
+        <div class="section-label">What's Built</div>
+        <div class="workflow-grid">
+          <div class="wf-card">
+            <div class="wf-num">Workflow 1</div>
+            <h3>Document Index</h3>
+            <p>Select a case folder. AI-extracted dates and descriptions for every PDF. Formatted Excel index filed back to Box.</p>
+            <span class="wf-badge badge-live">Live</span>
+          </div>
+          <div class="wf-card">
+            <div class="wf-num">Workflow 2</div>
+            <h3>Deposition Summary</h3>
+            <p>Select a transcript. Topics, summaries, legal significance tags. Excel and navigable PDF both filed back to Box.</p>
+            <span class="wf-badge badge-live">Live</span>
+          </div>
+          <div class="wf-card dim">
+            <div class="wf-num">Workflow 3</div>
+            <h3>Medical Chronology</h3>
+            <p>Research spikes: OCR, multi-doc inputs, output quality, pipeline design.</p>
+            <span class="wf-badge badge-next">On Deck</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
   </main>
 
   <footer>
