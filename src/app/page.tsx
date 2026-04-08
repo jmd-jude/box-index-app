@@ -187,8 +187,8 @@ export default function Home() {
       {/* Header */}
       <header className="text-white px-8 py-4 flex items-center justify-between" style={{ backgroundColor: '#669966' }}>
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="FPAmed" className="h-8 w-auto brightness-0 invert" />
-          <p className="text-white/80 text-sm hidden sm:block">FPAmed Document Tools</p>
+          <img src="/logo.png" alt="fpamed" className="h-8 w-auto brightness-0 invert" />
+          <p className="text-white/80 text-sm hidden sm:block">AI Document Toolkit</p>
         </div>
         {auth && (
           <div className="flex items-center gap-4 text-sm">
@@ -208,10 +208,10 @@ export default function Home() {
       <main className={`flex-1 flex flex-col ${auth && pipeline && !job ? '' : 'items-center justify-center px-8 py-12'}`}>
         {/* ── State 1: Unauthenticated ── */}
         {!auth && (
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-5xl">
             <div className="text-center mb-10">
-              <h1 className="text-2xl font-semibold text-slate-800 mb-2">FPAmed Document Tools</h1>
-              <p className="text-slate-500 text-sm">AI-assisted document workflows, connected to your Box account.</p>
+              <h1 className="text-2xl font-semibold text-slate-800 mb-2">AI-assisted document workflows, connected to your Box account</h1>
+              {/* <p className="text-slate-500 text-sm">AI-assisted document workflows, connected to your Box account.</p> */}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
@@ -261,7 +261,7 @@ export default function Home() {
 
         {/* ── State 2: Authenticated — pipeline selection ── */}
         {auth && !pipeline && !job && (
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-5xl">
             <p className="text-slate-500 text-sm text-center mb-8">Select a tool to get started.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Document Index card */}
@@ -372,7 +372,7 @@ export default function Home() {
 
         {/* ── State 4: Job running / complete / error ── */}
         {auth && job && (
-          <div className="w-full max-w-2xl text-center">
+          <div className="w-full max-w-5xl text-center">
             {(job.status === 'queued' || job.status === 'running') && (
               <div>
                 <div className="w-12 h-12 border-4 border-slate-200 rounded-full animate-spin mx-auto mb-6" style={{ borderTopColor: '#669966' }} />

@@ -3,8 +3,8 @@ import './globals.css';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'FPAmed Box Index Tool',
-  description: 'Generate a formatted document index from any Box folder.',
+  title: 'fpamed AI Toolkit',
+  description: 'Custom fpamed AI powered workflows built on the Box platform.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
