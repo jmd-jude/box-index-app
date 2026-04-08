@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fpamed — AI Strategy & Update</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #669966;
+      --green-dark:  #4f7a4f;
+      --green-light: #e8f0e8;
+      --text:        #1a1a1a;
+      --muted:       #666;
+      --border:      #d4e0d4;
+      --white:       #ffffff;
+      --bg:          #f5f7f5;
+      --dark:        #1a2a1a;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+
+    .slide-bg-white { background: var(--white); }
+    .slide-bg-light { background: var(--bg); }
+    .slide-bg-dark  { background: var(--dark); }
+
+    .logo-bar {
+      position: absolute;
+      top: 1.5rem;
+      left: 2rem;
+      z-index: 10;
+    }
+    .logo-bar img { height: 32px; width: auto; }
+
+    .slide-counter {
+      position: absolute;
+      bottom: 1.4rem;
+      right: 2rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+    .slide-bg-dark .slide-counter { color: rgba(255,255,255,0.2); }
+
+    #dots {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .dot.active { background: var(--green); transform: scale(1.4); }
+
+    #nav-prev, #nav-next {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border);
+      color: var(--green-dark);
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    #nav-prev { left: 1.25rem; }
+    #nav-next { right: 1.25rem; }
+    #nav-prev:hover, #nav-next:hover {
+      background: var(--green);
+      color: var(--white);
+      border-color: var(--green);
+    }
+
+    /* ── Layout helpers ── */
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4.5rem 5rem 3.5rem;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .slide-content.left { align-items: flex-start; }
+
+    .eyebrow {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+    .eyebrow-white { color: rgba(255,255,255,0.4); }
+
+    .divider {
+      width: 36px; height: 3px;
+      background: var(--green);
+      border-radius: 2px;
+      margin: 1.1rem 0;
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--white);
+    }
+    h1 span { color: var(--green); }
+
+    h2 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+    h2.white { color: var(--white); }
+
+    .lede {
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.65;
+      margin-top: 1rem;
+    }
+
+    .note {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-top: 1.1rem;
+      max-width: 560px;
+    }
+
+    .cover-meta {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 2.5rem;
+    }
+
+    /* ── Two-layer diagram ── */
+    .layers {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 100%;
+      max-width: 700px;
+      margin-top: 2rem;
+    }
+    .layer {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.4rem 2rem;
+      border: 1px solid var(--border);
+      background: var(--white);
+    }
+    .layer:first-child { border-radius: 10px 10px 0 0; border-bottom: none; }
+    .layer:last-child  { border-radius: 0 0 10px 10px; }
+    .layer-pct {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+      width: 5rem;
+      flex-shrink: 0;
+    }
+    .layer-body h4 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+    .layer-body p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .layer-tag {
+      margin-left: auto;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .tag-built {
+      background: var(--green);
+      color: var(--white);
+    }
+    .tag-daily {
+      background: var(--green-light);
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Platform compare (slide 4) ── */
+    .platform-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      width: 100%;
+      margin-top: 1.75rem;
+    }
+    .compare-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .compare-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+    .compare-img {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+    }
+    .compare-img img { width: 100%; display: block; }
+    .compare-caption {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ── Basket cards (slide 5) ── */
+    .basket-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      margin-top: 2rem;
+    }
+    .basket-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.75rem 2rem;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .basket-num {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+    .basket-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .basket-card p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .basket-examples {
+      font-size: 0.76rem;
+      color: var(--green-dark);
+      background: var(--green-light);
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      line-height: 1.6;
+      margin-top: 0.25rem;
+    }
+    .basket-platform {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: auto;
+      padding-top: 0.5rem;
+    }
+    .basket-platform strong { color: var(--text); font-weight: 600; }
+
+    /* ── Platform mapping (slide 6) ── */
+    .platform-map {
+      width: 100%;
+      max-width: 720px;
+      margin-top: 2rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .map-row {
+      display: grid;
+      grid-template-columns: 1fr 2rem 1.4fr auto;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 1.25rem 1.75rem;
+      background: var(--white);
+    }
+    .map-row + .map-row { border-top: 1px solid var(--border); }
+    .map-basket {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .map-basket span {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+    .map-arrow {
+      color: var(--border);
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    .map-platform {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .map-platform span {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+    .map-status {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.7rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .status-available {
+      background: var(--green-light);
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+    }
+    .status-live {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    /* ── Pivot track (slide 7) ── */
+    .pivot-track {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      margin-top: 2rem;
+      max-width: 600px;
+      width: 100%;
+    }
+    .pivot-item {
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+    }
+    .pivot-icon {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+    .pivot-icon.no {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.3);
+    }
+    .pivot-icon.yes {
+      background: var(--green);
+      color: var(--white);
+    }
+    .pivot-text {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.65;
+    }
+    .pivot-text strong { color: var(--white); font-weight: 700; }
+    .pivot-text em {
+      color: rgba(255,255,255,0.42);
+      font-style: normal;
+    }
+
+    /* ── Workflow cards ── */
+    .workflow-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+      width: 100%;
+      margin-top: 2rem;
+    }
+    .wf-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 1.6rem;
+      background: var(--white);
+    }
+    .wf-card.dim { opacity: 0.35; }
+    .wf-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 0.5rem;
+    }
+    .wf-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .wf-card p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .wf-stat {
+      margin-top: 1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--green-dark);
+      background: var(--green-light);
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+    }
+    .wf-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+    }
+    .badge-live { background: var(--green); color: var(--white); }
+    .badge-next {
+      background: var(--green-light);
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+    }
+    .demo-link {
+      margin-top: 1.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--green-dark);
+      text-decoration: none;
+      padding: 0.45rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--green-light);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .demo-link:hover {
+      background: var(--green);
+      color: var(--white);
+      border-color: var(--green);
+    }
+
+    /* ── Vision timeline (slide 9) ── */
+    .vision-track {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 640px;
+    }
+    .vision-item {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .vision-time {
+      flex-shrink: 0;
+      width: 100px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      padding-top: 0.2rem;
+      line-height: 1.4;
+    }
+    .vision-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+    .vision-body strong { font-weight: 700; color: var(--text); }
+
+    /* ── Closing thoughts (slide 10) ── */
+    .thought-list {
+      list-style: none;
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      max-width: 640px;
+    }
+    .thought-item {
+      padding: 1.1rem 1.4rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+    }
+    .thought-text {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .thought-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 0.3rem;
+    }
+
+    /* ── Agenda slide ── */
+    .agenda-list {
+      list-style: none;
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 540px;
+    }
+    .agenda-item {
+      display: flex;
+      align-items: baseline;
+      gap: 1.25rem;
+      padding: 0.95rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .agenda-item:first-child { border-top: 1px solid var(--border); }
+    .agenda-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      width: 1.25rem;
+      flex-shrink: 0;
+    }
+    .agenda-title {
+      font-size: 0.97rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* ── Two-track roadmap (slide 9) ── */
+    .two-track {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      margin-top: 1.75rem;
+    }
+    .track-col { display: flex; flex-direction: column; gap: 0.85rem; }
+    .track-header {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green);
+      padding-bottom: 0.65rem;
+      border-bottom: 2px solid var(--green);
+    }
+    .track-item {
+      padding: 1rem 1.2rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .track-time {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .track-body {
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.65;
+      font-weight: 300;
+    }
+    .track-body strong { font-weight: 700; }
+
+    /* ── Light-mode pivot ── */
+    .pivot-text-light {
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .pivot-text-light strong { color: var(--text); font-weight: 700; }
+    .pivot-text-light em { color: var(--muted); font-style: normal; }
+    .pivot-icon-light-no {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.2rem;
+    }
+
+    /* ── Closing slide ── */
+    .closing-section {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 1.75rem;
+    }
+    .closing-horizon {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .closing-items { display: flex; flex-direction: column; gap: 0.5rem; }
+    .closing-item {
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.65;
+      padding: 0.6rem 0.9rem;
+      border-left: 2px solid var(--border);
+    }
+    .closing-item.weight {
+      border-left-color: var(--green);
+      font-weight: 300;
+    }
+    .closing-item.weight strong { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- 1. COVER -->
+  <div class="slide slide-bg-dark active" data-index="0">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="text-align:center;">
+      <div class="eyebrow eyebrow-white">Management Briefing</div>
+      <h1>fpamed<br/><span>AI Strategy &amp; Update</span></h1>
+      <p class="lede" style="text-align:center;">Box Platform &nbsp;&middot;&nbsp; April 2026</p>
+      <div class="cover-meta">Confidential</div>
+    </div>
+  </div>
+
+  <!-- 2. AGENDA -->
+  <div class="slide slide-bg-light" data-index="1">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content left" style="max-width:760px;">
+      <div class="eyebrow">Today</div>
+      <h2>Here's what we're covering.</h2>
+      <ul class="agenda-list">
+        <li class="agenda-item"><span class="agenda-num">I</span><span class="agenda-title">Understanding the Box "Platform"</span></li>
+        <li class="agenda-item"><span class="agenda-num">II</span><span class="agenda-title">Aligning fpamed Opportunities to the Box Platform</span></li>
+        <li class="agenda-item"><span class="agenda-num">III</span><span class="agenda-title">Status: Three Workflow Automations</span></li>
+        <li class="agenda-item"><span class="agenda-num">IV</span><span class="agenda-title">Looking Ahead</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 3. THE 80/20 DIAGRAM -->
+  <div class="slide slide-bg-light" data-index="2">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:780px;">
+      <div class="eyebrow">First, some context</div>
+      <h2 style="text-align:center;">You're paying for two platforms.<br/>Most customers only use one.</h2>
+      <div class="layers">
+        <div class="layer">
+          <div class="layer-pct">80%</div>
+          <div class="layer-body">
+            <h4>Box Web App</h4>
+            <p>File storage, retrieval, team collaboration, on-demand AI Q&amp;A, AI Studio. Where every fpamed team member interacts with Box day to day.</p>
+          </div>
+          <span class="layer-tag tag-daily">Daily Use</span>
+        </div>
+        <div class="layer">
+          <div class="layer-pct">20%</div>
+          <div class="layer-body">
+            <h4>Box Developer Platform</h4>
+            <p>Custom applications built on Box APIs. Automated pipelines, structured AI outputs, bespoke workflows engineered to specification.</p>
+          </div>
+          <span class="layer-tag tag-built">Custom Tools</span>
+        </div>
+      </div>
+      <p class="note" style="text-align:center; font-size:0.78rem; margin-top:1.25rem;">One layer is built for non-technical users: configurable, accessible, standardized. The other is built for builders: tools to build custom applications for unique use-cases not integrated into the web app.</p>
+    </div>
+  </div>
+
+  <!-- 4. VISUAL LIFE -->
+  <div class="slide slide-bg-white" data-index="3">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:960px;">
+      <h2 style="text-align:center;">What each layer looks like.</h2>
+      <div class="platform-compare">
+        <div class="compare-col">
+          <span class="compare-label">Box Web App</span>
+          <div class="compare-img"><img src="webapp.png" alt="Box Web App — AI Studio agent for fpamed" /></div>
+          <p class="compare-caption">On-demand AI assistants inside Box — including custom agents already built for fpamed. Available to any team member with no engineering required.</p>
+        </div>
+        <div class="compare-col">
+          <span class="compare-label">Box Developer Platform</span>
+          <div class="compare-img"><img src="developer.png" alt="Box Developer Platform" /></div>
+          <p class="compare-caption">Where custom applications are built — automated pipelines, structured AI outputs, bespoke workflows needing to run on Box infrastructure.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. TWO BASKETS -->
+  <div class="slide slide-bg-light" data-index="4">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:940px;">
+      <div class="eyebrow">fpamed's AI Opportunity</div>
+      <h2 style="text-align:center;">The opportunity fits into two distinct baskets.</h2>
+      <div class="basket-grid">
+        <div class="basket-card">
+          <div class="basket-num">Basket 1</div>
+          <h3>AI as a force multiplier<br/>for fpamed's people</h3>
+          <p>AI and LLMs that make every fpamed persona — experts, ops, admin — more effective in their existing work. On-demand, interactive, available in the tools they already use.</p>
+          <div class="basket-examples">Case research &amp; Q&amp;A &middot; Report drafting &middot; Document review &middot; Expert witness prep</div>
+          <div class="basket-platform">Platform home: <strong>Box Web App / AI Studio</strong></div>
+        </div>
+        <div class="basket-card">
+          <div class="basket-num">Basket 2</div>
+          <h3>AI as automated<br/>operational infrastructure</h3>
+          <p>Narrowly defined, repeatable workflows where AI replaces manual labor, reduces vendor dependency, or creates new service capacity. Built once. Runs automatically.</p>
+          <div class="basket-examples">Document indexing &middot; Deposition summaries &middot; Medical chronologies</div>
+          <div class="basket-platform">Platform home: <strong>Box Developer Platform (custom app)</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. PLATFORM MIRRORS STRATEGY -->
+  <div class="slide slide-bg-white" data-index="5">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:780px;">
+      <div class="eyebrow">Platform &amp; Strategy</div>
+      <h2 style="text-align:center;">Box's architecture<br/>mirrors this split almost exactly.</h2>
+      <div class="platform-map">
+        <div class="map-row">
+          <div class="map-basket">Basket 1 <span>AI as assistant to fpamed's people</span></div>
+          <div class="map-arrow">→</div>
+          <div class="map-platform">Box Web App + AI Studio <span>On-demand, no custom code required</span></div>
+        </div>
+        <div class="map-row">
+          <div class="map-basket">Basket 2 <span>AI as operational infrastructure</span></div>
+          <div class="map-arrow">→</div>
+          <div class="map-platform">Box Developer Platform <span>Custom-built, automated pipelines</span></div>
+        </div>
+      </div>
+      <p class="note" style="text-align:center; margin-top:1.5rem;">One subscription. One security perimeter. Two distinct capability layers. fpamed is already positioned to operate in both.</p>
+    </div>
+  </div>
+
+  <!-- 7. THE PIVOT -->
+  <div class="slide slide-bg-light" data-index="6">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content left" style="max-width:760px;">
+      <div class="eyebrow">Workflow Automations Status</div>
+      <h2>Right building.<br/>Started on the Wrong floor.</h2>
+      <div class="pivot-track">
+        <div class="pivot-item">
+          <div class="pivot-icon-light-no">✕</div>
+          <div class="pivot-text-light">
+            <strong>Started in the web app.</strong>
+            <em> The right platform — but the web app layer isn't designed for bespoke, pipeline-based document automation at this level of specificity. Real ceiling. Not a configuration problem.</em>
+          </div>
+        </div>
+        <div class="pivot-item">
+          <div class="pivot-icon yes">✓</div>
+          <div class="pivot-text-light">
+            <strong>Moved to the Developer Platform.</strong> Already included in the subscription. Purpose-built for exactly this. Two workflows went from zero to production within weeks.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. WHAT'S RUNNING -->
+  <div class="slide slide-bg-white" data-index="7">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:940px;">
+      <div class="eyebrow">Box Developer Platform &middot; Basket 2</div>
+      <h2 style="text-align:center;">Two workflows in production.<br/>A third in design.</h2>
+      <div class="workflow-row">
+        <div class="wf-card">
+          <div class="wf-num">Workflow 1</div>
+          <h3>Document Index</h3>
+          <p>Pick a case folder. AI-extracted dates and descriptions for every PDF. Formatted Excel index filed back to Box automatically.</p>
+          <div><span class="wf-stat">700-file case indexed</span></div>
+          <div style="margin-top:0.6rem;"><span class="wf-badge badge-live">Live</span></div>
+        </div>
+        <div class="wf-card">
+          <div class="wf-num">Workflow 2</div>
+          <h3>Deposition Summary</h3>
+          <p>Pick a transcript. Topics, summaries, legal significance tags. Excel and navigable PDF both filed back to Box.</p>
+          <div><span class="wf-stat">303 pages → 17-page summary</span></div>
+          <div style="margin-top:0.6rem;"><span class="wf-badge badge-live">Live</span></div>
+        </div>
+        <div class="wf-card dim">
+          <div class="wf-num">Workflow 3</div>
+          <h3>Medical Chronology</h3>
+          <p>Architecture established. Spike phase: validating Box AI against real source material before building.</p>
+          <div style="margin-top:1rem;"><span class="wf-badge badge-next">On Deck</span></div>
+        </div>
+      </div>
+      <a class="demo-link" href="https://fpa-toolkit.up.railway.app/" target="_blank" rel="noopener noreferrer">Open Live App →</a>
+    </div>
+  </div>
+
+  <!-- 9. TWO-TRACK ROADMAP -->
+  <div class="slide slide-bg-light" data-index="8">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:900px;">
+      <div class="eyebrow">Looking Forward</div>
+      <h2 style="text-align:center;">Two tracks. Both matter.</h2>
+      <div class="two-track">
+        <div class="track-col">
+          <div class="track-header">Basket 2 — Operational Automation</div>
+          <div class="track-item">
+            <div class="track-time">Near term</div>
+            <div class="track-body">Three workflows running. Ops no longer catalogs files or waits on a vendor for deposition summaries. The overseas med chron vendor becomes <strong>a choice, not a dependency.</strong></div>
+          </div>
+          <div class="track-item">
+            <div class="track-time">Longer</div>
+            <div class="track-body">fpamed's forensic vocabulary, admissibility logic, and clinical judgment — could be deeply encoded in your own custom software. No vendor sells it.</div>
+          </div>
+        </div>
+        <div class="track-col">
+          <div class="track-header">Basket 1 — People &amp; Experts</div>
+          <div class="track-item">
+            <div class="track-time">Near term</div>
+            <div class="track-body">At least several progressive experts using Box AI agents & tools actively in their web app workflow. The infrastructure is already there — what's needed is an <strong>internal champion.</strong></div>
+          </div>
+          <div class="track-item">
+            <div class="track-time">Longer</div>
+            <div class="track-body">FPA's collective expertise — available as an interactive AI layer to every expert on the team. Case research, report drafting, document review — not outsourced, not ad hoc. <strong>Part of how the firm works.</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. WHAT'S NEXT -->
+  <div class="slide slide-bg-white" data-index="9">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content left" style="max-width:760px;">
+      <div class="eyebrow">What's Next</div>
+      <h2>Near term. And then...</h2>
+      <div class="closing-section">
+        <div class="closing-group">
+          <div class="closing-horizon">Near term</div>
+          <div class="closing-items">
+            <div class="closing-item">Run both live workflows through real cases. Gather feedback, iterate on output quality.</div>
+            <div class="closing-item">Begin medical chronology validation sprint — before building, confirm what the source material looks like and what the output needs to be.</div>
+            <div class="closing-item">Settle on Box Consulting's role going forward: validate this architecture, contribute to Basket 1, or focus on med chron.</div>
+          </div>
+        </div>
+        <div class="closing-group">
+          <div class="closing-horizon">Mid / Longer term</div>
+          <div class="closing-items">
+            <div class="closing-item weight"><strong>Both baskets need an internal owner</strong> — someone who holds this as a practice, not a project. That's a leadership decision, not a technical one.</div>
+            <div class="closing-item weight">The pace of change in AI isn't a background condition anymore. The organizations best positioned in 18 months will be the ones that <strong>decided early</strong> what they were building, who owned it, and how fast and nimble they were willing to be.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="dots"></div>
+<button id="nav-prev" aria-label="Previous">&#8592;</button>
+<button id="nav-next" aria-label="Next">&#8594;</button>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsEl = document.getElementById('dots');
+  let current = 0;
+
+  slides.forEach((slide, i) => {
+    const counter = slide.querySelector('.slide-counter');
+    if (counter) counter.textContent = `${i + 1} / ${slides.length}`;
+  });
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    dotsEl.children[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, slides.length - 1));
+    slides[current].classList.add('active');
+    dotsEl.children[current].classList.add('active');
+    document.getElementById('nav-prev').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('nav-next').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  document.getElementById('nav-prev').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('nav-next').addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
+    if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); goTo(current - 1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) goTo(dx < 0 ? current + 1 : current - 1);
+  });
+
+  goTo(0);
+</script>
+</body>
+</html>

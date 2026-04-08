@@ -128,5 +128,3 @@ For local dev, `BOX_REDIRECT_URI=http://localhost:3000/api/auth/callback`. The B
 | `python/depo_pdf_generator.py` | Reads topics CSV + saved transcript PDF; builds styled summary table with exact PyMuPDF font-metric row heights and LINK_GOTO annotations; merges with transcript into `{slug}_Summarized.pdf` |
 | `python/depo_experiment.py` | Original proof-of-concept — do not invoke from app, do not modify |
 | `src/app/globals.css` | Box Content Picker CSS overrides scoped to `#box-picker-container` |
-
-The root `manifest.py` and `report.py` are the original scripts with hardcoded constants — do not invoke these from the app. The `python/` versions are the ones wired to the API.

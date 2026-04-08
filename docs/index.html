@@ -43,7 +43,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.4rem 0;
+      padding: 0.85rem 0;
     }
 
     .header-inner img { height: 36px; width: auto; }
@@ -56,11 +56,18 @@
       color: rgba(255,255,255,0.3);
     }
 
+    /* ── Sticky top wrapper ── */
+    .sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
     /* ── Hero strip ── */
     .hero-strip {
       background: var(--dark);
       border-bottom: 3px solid var(--green);
-      padding: 2.75rem 2rem 3rem;
+      padding: 1.4rem 2rem 1.6rem;
     }
 
     .hero-strip-inner {
@@ -74,15 +81,15 @@
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--green);
-      margin-bottom: 0.85rem;
+      margin-bottom: 0.5rem;
     }
 
     .hero-strip h1 {
-      font-size: 2rem;
+      font-size: 1.6rem;
       font-weight: 700;
       color: var(--white);
       line-height: 1.2;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
 
     .hero-strip p {
@@ -311,18 +318,20 @@
 </head>
 <body>
 
-  <header>
-    <div class="header-inner">
-      <img src="logo.png" alt="FPAmed" />
-      <span class="header-tag">Box Platform &middot; AI Workflows</span>
-    </div>
-  </header>
+  <div class="sticky-top">
+    <header>
+      <div class="header-inner">
+        <img src="logo.png" alt="FPAmed" />
+        <span class="header-tag">Box Platform &middot; AI Workflows</span>
+      </div>
+    </header>
 
-  <div class="hero-strip">
-    <div class="hero-strip-inner">
-      <div class="eyebrow">Project Hub</div>
-      <h1>Custom AI document tools,<br/>built on your existing Box subscription.</h1>
-      <p>Automated pipelines for case document indexing, deposition summaries & medical chronologies.</p>
+    <div class="hero-strip">
+      <div class="hero-strip-inner">
+        <div class="eyebrow">Project Hub</div>
+        <h1>Custom AI document tools,<br/>built on your existing Box subscription.</h1>
+        <!-- <p>Automated pipelines for case document indexing, deposition summaries & medical chronologies.</p> -->
+      </div>
     </div>
   </div>
 
@@ -331,13 +340,21 @@
 
       <!-- Updates -->
       <section>
-        <div class="section-label">Updates</div>
+        <div class="section-label">Recent Updates</div>
         <div class="update-list">
           <a class="update-item" href="040626.html" target="_blank" rel="noopener noreferrer">
             <span class="update-date">Apr 6, 2026</span>
             <div>
-              <div class="update-title">Update — April 2026</div>
-              <!-- <div class="update-sub">Platform strategy, two workflows live, open questions for discussion</div> -->
+              <div class="update-title">Jude | Ted</div>
+              <div class="update-sub">Platform strategy pivot, Custom app status, implications</div>
+            </div>
+            <span class="update-arrow">&#8594;</span>
+          </a>
+          <a class="update-item" href="041026.html" target="_blank" rel="noopener noreferrer">
+            <span class="update-date">Apr 10, 2026</span>
+            <div>
+              <div class="update-title">fpamed Management Team | Jude</div>
+              <div class="update-sub">Box Enterprise Platform, Alignment with fpamed Priorities, Solution pivot & progress, Roads Ahead </div>
             </div>
             <span class="update-arrow">&#8594;</span>
           </a>
@@ -361,19 +378,19 @@
 
       <!-- Workflows -->
       <section>
-        <div class="section-label">What's Built</div>
+        <div class="section-label">Progress</div>
         <div class="workflow-grid">
           <div class="wf-card">
             <div class="wf-num">Workflow 1</div>
             <h3>Document Index</h3>
             <p>Select a case folder. AI-extracted dates and descriptions for every PDF. Formatted Excel index filed back to Box.</p>
-            <span class="wf-badge badge-live">Live</span>
+            <span class="wf-badge badge-live">Live - [beta]</span>
           </div>
           <div class="wf-card">
             <div class="wf-num">Workflow 2</div>
             <h3>Deposition Summary</h3>
             <p>Select a transcript. Topics, summaries, legal significance tags. Excel and navigable PDF both filed back to Box.</p>
-            <span class="wf-badge badge-live">Live</span>
+            <span class="wf-badge badge-live">Live - [beta]</span>
           </div>
           <div class="wf-card dim">
             <div class="wf-num">Workflow 3</div>
