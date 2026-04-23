@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fpamed — Project Update · Apr 23</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #669966;
+      --green-dark:  #4f7a4f;
+      --green-light: #e8f0e8;
+      --text:        #1a1a1a;
+      --muted:       #666;
+      --border:      #d4e0d4;
+      --white:       #ffffff;
+      --bg:          #f5f7f5;
+      --dark:        #1a2a1a;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+
+    .slide-bg-white { background: var(--white); }
+    .slide-bg-light { background: var(--bg); }
+    .slide-bg-dark  { background: var(--dark); }
+
+    .logo-bar {
+      position: absolute;
+      top: 1.5rem;
+      left: 2rem;
+      z-index: 10;
+    }
+    .logo-bar img { height: 32px; width: auto; }
+
+    .slide-counter {
+      position: absolute;
+      bottom: 1.4rem;
+      right: 2rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: rgba(0,0,0,0.15);
+      z-index: 10;
+    }
+    .slide-bg-dark .slide-counter { color: rgba(255,255,255,0.2); }
+
+    #dots {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .dot.active { background: var(--green); transform: scale(1.4); }
+
+    #nav-prev, #nav-next {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border);
+      color: var(--green-dark);
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    #nav-prev { left: 1.25rem; }
+    #nav-next { right: 1.25rem; }
+    #nav-prev:hover, #nav-next:hover {
+      background: var(--green);
+      color: var(--white);
+      border-color: var(--green);
+    }
+
+    /* ── Layout helpers ── */
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4.5rem 5rem 3.5rem;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .slide-content.left { align-items: flex-start; }
+
+    .eyebrow {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+    .eyebrow-white { color: rgba(255,255,255,0.4); }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--white);
+    }
+    h1 span { color: var(--green); }
+
+    h2 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .lede {
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.65;
+      margin-top: 1rem;
+    }
+
+    .cover-meta {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 2.5rem;
+    }
+
+    /* ── Status table ── */
+    .status-table {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 1.75rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .st-row {
+      display: grid;
+      grid-template-columns: 1.8fr auto 2fr;
+      align-items: start;
+      gap: 1.25rem;
+      padding: 1.05rem 1.6rem;
+      background: var(--white);
+    }
+    .st-row + .st-row { border-top: 1px solid var(--border); }
+    .st-item {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+      padding-top: 0.1rem;
+    }
+    .st-comment {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .st-comment strong { color: var(--text); font-weight: 600; }
+    .st-badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.7rem;
+      border-radius: 20px;
+      white-space: nowrap;
+      margin-top: 0.1rem;
+    }
+    .badge-done {
+      background: var(--green);
+      color: var(--white);
+    }
+    .badge-progress {
+      background: var(--green-light);
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+    }
+    .badge-pending {
+      background: #f0f0f0;
+      color: #999;
+      border: 1px solid #e0e0e0;
+    }
+
+    /* ── Stat pair ── */
+    .stat-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 760px;
+      margin-top: 1.75rem;
+    }
+    .stat-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.6rem 1.75rem;
+    }
+    .stat-card-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-key {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .stat-val {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Feedback ── */
+    .feedback-block {
+      width: 100%;
+      max-width: 680px;
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .quote-item {
+      padding: 0.85rem 1.2rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--green);
+      background: var(--green-light);
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .issue-item {
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      border-left: 3px solid #b03030;
+      background: #fdf0ee;
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .issue-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #b03030;
+      margin-bottom: 0.4rem;
+    }
+    .issue-fix {
+      margin-top: 0.6rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Efficiency ── */
+    .eff-block {
+      width: 100%;
+      max-width: 620px;
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .eff-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 1.25rem;
+    }
+    .eff-num {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+      flex-shrink: 0;
+      width: 6rem;
+    }
+    .eff-label {
+      font-size: 0.92rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .eff-label span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      display: block;
+      margin-top: 0.2rem;
+    }
+    .note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-top: 1.5rem;
+      max-width: 560px;
+    }
+
+    /* ── Next steps ── */
+    .next-block {
+      width: 100%;
+      max-width: 640px;
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .next-item {
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      padding: 1.15rem 1.4rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .next-badge {
+      flex-shrink: 0;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.7rem;
+      border-radius: 20px;
+      margin-top: 0.2rem;
+      white-space: nowrap;
+    }
+    .badge-in-flight {
+      background: var(--green);
+      color: var(--white);
+    }
+    .badge-up-next {
+      background: var(--green-light);
+      color: var(--green-dark);
+      border: 1px solid var(--border);
+    }
+    .next-body {
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .next-body strong { font-weight: 700; }
+    .next-body span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      display: block;
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- 1. COVER -->
+  <div class="slide slide-bg-dark active" data-index="0">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="text-align:center;">
+      <div class="eyebrow eyebrow-white">AI Workstreams</div>
+      <h1>Project Update</h1>
+      <p class="lede" style="text-align:center;">April 23, 2026</p>
+      <div class="cover-meta">Confidential</div>
+    </div>
+  </div>
+
+  <!-- 2. STATUS CHECK -->
+  <div class="slide slide-bg-light" data-index="1">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:960px;">
+      <div class="eyebrow">Apr 10 · What's Next &#8594; Status</div>
+      <h2 style="text-align:center;">Four items. Here's where each landed.</h2>
+      <div class="status-table">
+        <div class="st-row">
+          <div class="st-item">Alias custom app URL to box.fpamed.com</div>
+          <span class="st-badge badge-pending">Not done</span>
+          <div class="st-comment">Need access to fpamed domain registrar to create the record. 3-minute change once access is in hand.</div>
+        </div>
+        <div class="st-row">
+          <div class="st-item">Run live workflows with real cases</div>
+          <span class="st-badge badge-done">Done</span>
+          <div class="st-comment"><strong>8 depo summaries + 1 index run</strong> on Apr 20, self-serve by Jacqui. Details on the next slides.</div>
+        </div>
+        <div class="st-row">
+          <div class="st-item">Begin Med Chron validation testing</div>
+          <span class="st-badge badge-progress">In progress</span>
+          <div class="st-comment">Dev environment setup underway. Spike: validate Box AI against real source material before building pipeline.</div>
+        </div>
+        <div class="st-row">
+          <div class="st-item">Settle on Box Consulting's role</div>
+          <span class="st-badge badge-done">Done</span>
+          <div class="st-comment">JH: ad-hoc custom dev on med chron. FPA: all other Box consulting needs.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PRODUCTION DATA -->
+  <div class="slide slide-bg-white" data-index="2">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content" style="max-width:860px;">
+      <div class="eyebrow">Live Production Run · Apr 20</div>
+      <h2 style="text-align:center;">Both workflows. Self-serve. No assistance.</h2>
+      <div class="stat-pair">
+        <div class="stat-card">
+          <div class="stat-card-label">Depo Summary &mdash; 8 Jobs</div>
+          <div class="stat-row"><span class="stat-key">Avg pages / transcript</span><span class="stat-val">54</span></div>
+          <div class="stat-row"><span class="stat-key">Avg runtime</span><span class="stat-val">1.43 min</span></div>
+          <div class="stat-row"><span class="stat-key">Processing speed</span><span class="stat-val">1.67 sec / page</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Document Index &mdash; 1 Job</div>
+          <div class="stat-row"><span class="stat-key">Files processed</span><span class="stat-val">792</span></div>
+          <div class="stat-row"><span class="stat-key">Total runtime</span><span class="stat-val">49.6 min</span></div>
+          <div class="stat-row"><span class="stat-key">Processing speed</span><span class="stat-val">3.76 sec / file</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. DEPO FEEDBACK -->
+  <div class="slide slide-bg-light" data-index="3">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content left" style="max-width:800px;">
+      <div class="eyebrow">Depo Summary · User Feedback (Mark)</div>
+      <h2>Strong signal on quality.<br/>One real fix needed.</h2>
+      <div class="feedback-block">
+        <div class="quote-item">"At first glance, the Depo summary is amazing."</div>
+        <div class="quote-item">"As far as I'm concerned, the contents of the Depo summaries are absolutely fine."</div>
+        <div class="quote-item">"My time is gonna be much reduced."</div>
+        <div class="issue-item">
+          <div class="issue-label">Issue</div>
+          Transcripts submitted were condensed format: 4 physical pages per page. PDF links in the summary navigate to the condensed page, not the actual testimony page within it. Mark flagged this as substantive, not cosmetic.
+          <div class="issue-fix">In progress: building accurate link navigation for 4-up condensed transcripts.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. INDEX EFFICIENCY -->
+  <div class="slide slide-bg-white" data-index="4">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content left" style="max-width:760px;">
+      <div class="eyebrow">Document Index · Efficiency</div>
+      <h2>792 files. 50 minutes.<br/>Manual would have been 6-7 hours.</h2>
+      <div class="eff-block">
+        <div class="eff-stat">
+          <div class="eff-num">~90%</div>
+          <div class="eff-label">reduction in per-file processing time
+            <span>3.76 sec / file automated vs. 30-45 sec / file manually</span>
+          </div>
+        </div>
+        <div class="eff-stat">
+          <div class="eff-num">~98%</div>
+          <div class="eff-label">reduction in total labor time
+            <span>50 min elapsed (automated) vs. ~6-7 hours of staff time</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">Staff time freed from catalog work is reallocated to higher-value activity. Where labor cost is billed to clients, the delta is margin.</p>
+    </div>
+  </div>
+
+  <!-- 6. WHAT'S NEXT -->
+  <div class="slide slide-bg-light" data-index="5">
+    <div class="logo-bar"><img src="logo.png" alt="fpamed" /></div>
+    <div class="slide-counter"></div>
+    <div class="slide-content left" style="max-width:760px;">
+      <div class="eyebrow">What's Next</div>
+      <h2>One fix in flight.<br/>Then all focus on med chron.</h2>
+      <div class="next-block">
+        <div class="next-item">
+          <span class="next-badge badge-in-flight">In flight</span>
+          <div class="next-body">
+            <strong>4-up condensed depo link accuracy</strong>
+            <span>Building navigation logic so summary links target the correct testimony page within a condensed (4-up) transcript PDF, not just the condensed page number.</span>
+          </div>
+        </div>
+        <div class="next-item">
+          <span class="next-badge badge-up-next">Up next</span>
+          <div class="next-body">
+            <strong>Medical chronology validation sprint</strong>
+            <span>Confirm what the source material looks like and what the output needs to be before writing a line of pipeline code. Box AI against real medical records.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="dots"></div>
+<button id="nav-prev" aria-label="Previous">&#8592;</button>
+<button id="nav-next" aria-label="Next">&#8594;</button>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsEl = document.getElementById('dots');
+  let current = 0;
+
+  slides.forEach((slide, i) => {
+    const counter = slide.querySelector('.slide-counter');
+    if (counter) counter.textContent = `${i + 1} / ${slides.length}`;
+  });
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    dotsEl.children[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, slides.length - 1));
+    slides[current].classList.add('active');
+    dotsEl.children[current].classList.add('active');
+    document.getElementById('nav-prev').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('nav-next').style.opacity = current === slides.length - 1 ? '0.3' : '1';
+  }
+
+  document.getElementById('nav-prev').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('nav-next').addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', ' ', 'ArrowDown'].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
+    if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); goTo(current - 1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) goTo(dx < 0 ? current + 1 : current - 1);
+  });
+
+  goTo(0);
+</script>
+</body>
+</html>
